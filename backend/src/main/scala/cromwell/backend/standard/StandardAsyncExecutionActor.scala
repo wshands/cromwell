@@ -36,6 +36,7 @@ import net.ceedubs.ficus.Ficus._
 import shapeless.Coproduct
 import wom.callable.{AdHocValue, CommandTaskDefinition, ContainerizedInputExpression, RuntimeEnvironment}
 import wom.expression.WomExpression
+import wom.format.MemorySize
 import wom.graph.LocalName
 import wom.values._
 import wom.{CommandSetupSideEffectFile, InstantiatedCommand, WomFileMapper}
@@ -331,7 +332,17 @@ trait StandardAsyncExecutionActor extends AsyncBackendJobExecutionActor with Sta
     val errorOrGlobFiles: ErrorOr[List[WomGlobFile]] =
       backendEngineFunctions.findGlobOutputs(call, jobDescriptor)
 
-    lazy val environmentVariables = instantiatedCommand.environmentVariables map { case (k, v) => s"""export $k="$v"""" } mkString("", "\n", "\n")
+    lazy val memEnvVariables = jobDescriptor.runtimeAttributes.get("memory") match {
+      case Some(WomString(value)) => MemorySize.parse(value) match {
+        case Success(memSize) =>
+          Map("MEM_SIZE" -> memSize.amount.toInt.toString, "MEM_UNIT" -> memSize.unit.toString)
+        case Failure(_) =>
+          Map("MEM_SIZE" -> "", "MEM_UNIT" -> "")
+      }
+      case _ => Map("MEM_SIZE" -> "", "MEM_UNIT" -> "")
+    }
+
+    lazy val environmentVariables = (instantiatedCommand.environmentVariables ++ memEnvVariables) map { case (k, v) => s"""export $k="$v"""" } mkString("", "\n", "\n")
 
     val home = jobDescriptor.taskCall.callable.homeOverride.map { _ (runtimeEnvironment) }.getOrElse("$HOME")
     val shortId = jobDescriptor.workflowDescriptor.id.shortString
@@ -1129,7 +1140,7 @@ trait StandardAsyncExecutionActor extends AsyncBackendJobExecutionActor with Sta
               println(s"--------------------------------")
               println(s"RUCHI:: DONE BUT FOUND OOM MESSAGE IN STDERR!")
               println(s"--------------------------------")
-              val executionHandle = Future.successful(FailedNonRetryableExecutionHandle(OOM(jobDescriptor.key.tag, stderrAsOption), Option(returnCodeAsInt)))
+              val executionHandle = Future.successful(FailedNonRetryableExecutionHandle(OOM(jobDescriptor.key.call.fullyQualifiedName, jobDescriptor.key.index, jobDescriptor.key.attempt, stderrAsOption), Option(returnCodeAsInt)))
               retryOOMElseFail(status, executionHandle)
             //If none of those above apply, you've succeeded!
             case Success(returnCodeAsInt) if !isOOM =>
@@ -1146,7 +1157,7 @@ trait StandardAsyncExecutionActor extends AsyncBackendJobExecutionActor with Sta
             println(s"--------------------------------")
             println(s"RUCHI:: NOT DONE BUT FOUND OOM MESSAGE IN STDERR!")
             println(s"--------------------------------")
-            val executionHandle = Future.successful(FailedNonRetryableExecutionHandle(OOM(jobDescriptor.key.tag, stderrAsOption), tryReturnCodeAsInt.toOption))
+            val executionHandle = Future.successful(FailedNonRetryableExecutionHandle(OOM(jobDescriptor.key.call.fullyQualifiedName, jobDescriptor.key.index, jobDescriptor.key.attempt, stderrAsOption), tryReturnCodeAsInt.toOption))
             retryOOMElseFail(status, executionHandle)
           }
           else {
