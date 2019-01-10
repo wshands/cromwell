@@ -13,7 +13,7 @@ import wdl.transforms.base.wdlom2wom.graph.renaming.GraphIdentifierLookupRenamer
 import wdl.transforms.base.wdlom2wom.graph.renaming._
 import wdl.transforms.base.wdlom2wom.graph.{GraphNodeMakerInputs, WorkflowGraphElementToGraphNode}
 import wom.callable.{Callable, WorkflowDefinition}
-import wom.graph.GraphNodePort.{NodeCompletionPort, OutputPort}
+import wom.graph.GraphNodePort.OutputPort
 import wom.graph.expression.AnonymousExpressionNode
 import wom.graph.{GraphNode, WomIdentifier, Graph => WomGraph}
 import wom.types.WomType
@@ -64,16 +64,13 @@ object WorkflowDefinitionElementToWomWorkflowDefinition {
 
     val DotRegex = "(.*)\\.(.*)".r
     def seedGeneratedValueHandle(port: OutputPort): GeneratedValueHandle = (port, port.name) match {
-      case (nodeCompletionPort: NodeCompletionPort, _) => GeneratedCallOutputAsStructHandle(nodeCompletionPort.name, nodeCompletionPort.womType)
       case (_, DotRegex(first, second)) => GeneratedCallOutputValueHandle(first, second, port.womType)
       case _ => GeneratedIdentifierValueHandle(port.name, port.womType)
     }
 
-
-      val seedNodes = a.seedNodes
-      val outputPorts = seedNodes.flatMap(_.outputPorts)
-      val seedGeneratedValueHandles: Set[GeneratedValueHandle] = outputPorts.map(seedGeneratedValueHandle)
-
+    val seedNodes = a.seedNodes
+    val outputPorts = seedNodes.flatMap(_.outputPorts)
+    val seedGeneratedValueHandles: Set[GeneratedValueHandle] = outputPorts.map(seedGeneratedValueHandle)
 
     for {
       linkedGraph <- LinkedGraphMaker.make(nodes = a.graphElements, seedGeneratedValueHandles, typeAliases = a.typeAliases, callables = a.callables)
@@ -98,7 +95,7 @@ object WorkflowDefinitionElementToWomWorkflowDefinition {
         val availableValues: Map[String, OutputPort] = (for {
           // Anonymous expression nodes are one-time-use and do not exist in the universe of available linking candidates (#3999)
           node <- currentList.filterNot(_.isInstanceOf[AnonymousExpressionNode])
-          port <- node.outputPorts ++ node.completionPorts
+          port <- node.outputPorts
         } yield outputName(node, port) -> port).toMap
 
         val generatedGraphNodesValidation: ErrorOr[Set[GraphNode]] =

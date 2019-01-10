@@ -72,7 +72,7 @@ object Graph {
     def goodLink(port: InputPort): ErrorOr[Unit] = {
       val upstreamNodeValidation = upstreamNodeInGraph(port)
       val inputPortEmbeddedValidation = portProperlyEmbedded("input", port, _.inputPorts)
-      val upstreamPortEmbeddedValidation = portProperlyEmbedded("upstream", port.upstream, n => n.outputPorts ++ n.completionPorts)
+      val upstreamPortEmbeddedValidation = portProperlyEmbedded("upstream", port.upstream, n => n.outputPorts)
 
       (upstreamNodeValidation, inputPortEmbeddedValidation, upstreamPortEmbeddedValidation).tupled.void
     }

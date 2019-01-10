@@ -49,9 +49,11 @@ object ExecutionStore {
           upstreamPort.executionNode.isInStatus(chooseIndex(upstreamPort), statusTable)
         // In the general case, the dependencies are held by the upstreamPorts
         case _ =>
-          key.node.upstreamPorts forall { p =>
+          val result = key.node.upstreamPorts forall { p =>
               p.executionNode.isInStatus(chooseIndex(p), statusTable)
           }
+          println(s"Done=$result for $key upstreams: ${key.node.upstreamPorts.map(_.internalName).mkString(", ")}")
+          result
       }
     }
 
@@ -67,7 +69,6 @@ object ExecutionStore {
       * Node that should be considered to determine upstream dependencies
       */
     def executionNode: GraphNode = outputPort match {
-      case inner: InnerGraphCallCompletionPort => inner.callCompletionPort.graphNode
       case scatter: ScatterGathererPort => scatter.outputToGather
       case conditional: ConditionalOutputPort => conditional.outputToExpose
       case other => other.graphNode

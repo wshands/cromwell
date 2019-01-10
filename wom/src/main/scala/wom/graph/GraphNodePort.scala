@@ -1,7 +1,7 @@
 package wom.graph
 
 import wom.expression.WomExpression
-import wom.types.{WomArrayType, WomNothingType, WomOptionalType, WomType}
+import wom.types.{WomArrayType, WomOptionalType, WomType}
 
 sealed trait GraphNodePort {
   def name: String
@@ -77,30 +77,6 @@ object GraphNodePort {
     override def identifier: WomIdentifier = outputToExpose.identifier
     override val womType: WomOptionalType = WomOptionalType(outputToExpose.womType).flatOptionalType
     lazy val conditionalNode: ConditionalNode = g(())
-  }
-
-  sealed trait NodeCompletionPort extends OutputPort {
-    override lazy val identifier: WomIdentifier = {
-      val name = graphNode.localName
-      WomIdentifier(LocalName(name), graphNode.identifier.fullyQualifiedName.combine(name))
-    }
-  }
-
-  final case class CallCompletionPort(g: Unit => CallNode, override val womType: WomType = WomNothingType) extends NodeCompletionPort with DelayedGraphNodePort {
-    override lazy val identifier: WomIdentifier = {
-      val name = graphNode.localName
-      WomIdentifier(LocalName(name), graphNode.identifier.fullyQualifiedName.combine(name))
-    }
-  }
-
-  final case class OuterGraphNodeCompletionPort(g: Unit => OuterGraphInputNode, callCompletionPort: NodeCompletionPort) extends NodeCompletionPort with DelayedGraphNodePort {
-    override val womType = callCompletionPort.womType
-    override lazy val identifier: WomIdentifier = callCompletionPort.identifier
-  }
-
-  final case class InnerGraphCallCompletionPort(g: Unit => GraphNode, callCompletionPort: NodeCompletionPort) extends NodeCompletionPort with DelayedGraphNodePort {
-    val womType: WomType = WomArrayType(callCompletionPort.womType)
-    override lazy val identifier: WomIdentifier = callCompletionPort.identifier
   }
 
   /**

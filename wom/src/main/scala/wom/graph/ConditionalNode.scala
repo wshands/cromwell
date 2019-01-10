@@ -21,8 +21,6 @@ final case class ConditionalNode private(override val innerGraph: Graph,
 
   override val inputPorts: Set[InputPort] = Set(ConnectedInputPort("condition", WomBooleanType, conditionExpression.singleOutputPort, _ => this))
   override val outputPorts: Set[GraphNodePort.OutputPort] = conditionalOutputPorts.toSet[OutputPort]
-
-  override val completionPorts: Set[NodeCompletionPort] = Set.empty // innerGraph.nodes.flatMap(_.completionPorts).map(p => InnerGraphCallCompletionPort(_ => this, p))
 }
 
 object ConditionalNode  {

@@ -13,7 +13,7 @@ final case class GeneratedCallOutputValueHandle(callName: String, outputName: St
 }
 
 // A handle representing a call's completion
-final case class GeneratedCallOutputAsStructHandle(finishedCallName: String, structType: WomType) extends GeneratedValueHandle {
-  override def linkableName: String = s"$finishedCallName"
-  override val womType: WomType = structType
-}
+//final case class GeneratedCallOutputAsStructHandle(finishedCallName: String, structType: WomType) extends GeneratedValueHandle {
+//  override def linkableName: String = s"$finishedCallName"
+//  override val womType: WomType = structType
+//}

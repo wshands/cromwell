@@ -390,7 +390,7 @@ object WomToWdlom {
       else
         None
 
-      val afters = call.nonInputBasedPrerequisites.map(_.localName).toVector
+      val afters = call.nonInputBasedPrerequisites.map(_.internalName).toVector
 
       CallElement(
         callableName,

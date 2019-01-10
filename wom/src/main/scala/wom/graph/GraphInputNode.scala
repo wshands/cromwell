@@ -78,10 +78,8 @@ object OuterGraphInputNode {
   */
 class OuterGraphInputNode protected(override val identifier: WomIdentifier, val linkToOuterGraph: GraphNodePort.OutputPort, val preserveScatterIndex: Boolean) extends GraphInputNode {
   override def womType: WomType = linkToOuterGraph.womType
-  override lazy val singleOutputPort: OutputPort = linkToOuterGraph match {
-    case ncp: NodeCompletionPort => OuterGraphNodeCompletionPort(_ => this, ncp)
-    case _ => GraphNodeOutputPort(identifier, womType, this)
-  }
+  override lazy val singleOutputPort: OutputPort = GraphNodeOutputPort(identifier, womType, this)
+
   lazy val linkToOuterGraphNode = linkToOuterGraph.graphNode
 
   lazy val nameToPortMapping: (String, OutputPort) = localName -> singleOutputPort

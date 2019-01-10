@@ -37,7 +37,6 @@ package object graph {
       a.graphElements.toList.traverse(_.generatedValueHandles(typeAliases, callables)).map(_.toSet.flatten) map { _.map {
         case GeneratedIdentifierValueHandle(id, womType) => GeneratedIdentifierValueHandle(id, WomArrayType(womType))
         case GeneratedCallOutputValueHandle(first, second, womType) => GeneratedCallOutputValueHandle(first, second, WomArrayType(womType))
-        case GeneratedCallOutputAsStructHandle(finishedCallName, womType) => GeneratedCallOutputAsStructHandle(finishedCallName, WomArrayType(womType))
       } }
     }
   }
@@ -47,7 +46,6 @@ package object graph {
       a.graphElements.toList.traverse(_.generatedValueHandles(typeAliases, callables)).map(_.toSet.flatten) map { _.map {
         case GeneratedIdentifierValueHandle(id, womType) => GeneratedIdentifierValueHandle(id, WomOptionalType(womType).flatOptionalType)
         case GeneratedCallOutputValueHandle(first, second, womType) => GeneratedCallOutputValueHandle(first, second, WomOptionalType(womType).flatOptionalType)
-        case GeneratedCallOutputAsStructHandle(finishedCallName, womType) => GeneratedCallOutputAsStructHandle(finishedCallName, WomOptionalType(womType).flatOptionalType)
       } }
     }
   }
@@ -63,7 +61,7 @@ package object graph {
           val callAlias = a.alias.getOrElse(callable.name)
           val outputs = callable.outputs.map(callableOutputToHandle(callAlias)).toSet
           val callOutputAsStructType = WomCompositeType(outputs.map(o => o.outputName -> o.womType).toMap)
-          (outputs.toSet[GeneratedValueHandle] + GeneratedCallOutputAsStructHandle(callAlias, callOutputAsStructType)).validNel
+          (outputs.toSet[GeneratedValueHandle] + GeneratedIdentifierValueHandle(callAlias, callOutputAsStructType)).validNel
         case None => s"Cannot generate outputs for 'call ${a.callableReference}'. No such callable exists in [${callables.keySet.mkString(", ")}]".invalidNel
       }
     }

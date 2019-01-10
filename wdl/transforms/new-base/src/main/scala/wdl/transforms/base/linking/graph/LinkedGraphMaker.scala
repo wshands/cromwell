@@ -78,8 +78,7 @@ object LinkedGraphMaker {
       case (UnlinkedCallOutputOrIdentifierAndMemberAccessHook(first1, second1), GeneratedCallOutputValueHandle(first2, second2, _)) if first1 == first2 && second1 == second2 => true
 
       // Both afters and call-output-to-struct-assignment look up 'GeneratedCallOutputAsStructHandle's
-      case (UnlinkedAfterCallHook(upstreamCallName), GeneratedCallOutputAsStructHandle(finishedCallName, _)) => finishedCallName == upstreamCallName
-      case (UnlinkedIdentifierHook(identifier), GeneratedCallOutputAsStructHandle(finishedCallName, _)) => finishedCallName == identifier
+      case (UnlinkedAfterCallHook(upstreamCallName), GeneratedIdentifierValueHandle(finishedCallName, _)) => finishedCallName == upstreamCallName
       case _ => false
     }
 
@@ -92,9 +91,10 @@ object LinkedGraphMaker {
         case (Some(handle), hook) => (hook -> handle).validNel
         case (None, UnlinkedAfterCallHook(upstreamCallName)) =>
           val didYouMean = availableHandles.collect {
-            case after: GeneratedCallOutputAsStructHandle => s"'${after.finishedCallName}'"
+            case GeneratedIdentifierValueHandle(linkableName, _) => linkableName
           }.mkString("[", ", ", "]")
-          s"Cannot specify 'after $upstreamCallName': no such call exists. Available calls are: $didYouMean".invalidNel
+          val availableValues = availableHandles.map(h => s"'${h.linkableName}'").mkString("[", ", ", "]")
+          s"Cannot specify 'after $upstreamCallName': no such call exists. Available calls are: $didYouMean. Available values: $availableValues".invalidNel
         case (None, _) =>
             val didYouMean = availableHandles.map(h => s"'${h.linkableName}'").mkString("[", ", ", "]")
             s"Cannot lookup value '${consumedValueHook.linkString}', it is never declared. Available values are: $didYouMean".invalidNel

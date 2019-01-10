@@ -30,13 +30,9 @@ sealed abstract class CallNode extends GraphNode {
   /**
     * A set of prerequisites for this call which are defined *in addition to* any input-based upstream requirements.
     */
-  def nonInputBasedPrerequisites: Set[GraphNode]
+  def nonInputBasedPrerequisites: Set[OutputPort]
 
-  override lazy val upstreamPorts = calculateUpstreamPorts ++ nonInputBasedPrerequisites.flatMap(_.completionPorts)
-
-  val singleCompletionPort = CallCompletionPort(_ => this, WomCompositeType(callable.outputs.map(o => o.name -> o.womType).toMap))
-
-  override val completionPorts: Set[NodeCompletionPort] = Set(singleCompletionPort)
+  override lazy val upstreamPorts = calculateUpstreamPorts ++ nonInputBasedPrerequisites
 }
 
 final case class ExpressionCallNode private(override val identifier: WomIdentifier,
@@ -69,14 +65,19 @@ final case class CommandCallNode private(override val identifier: WomIdentifier,
                                          callable: CommandTaskDefinition,
                                          override val inputPorts: Set[GraphNodePort.InputPort],
                                          inputDefinitionMappings: InputDefinitionMappings,
-                                         override val nonInputBasedPrerequisites: Set[GraphNode],
+                                         override val nonInputBasedPrerequisites: Set[OutputPort],
                                          outputIdentifierCompoundingFunction: (WomIdentifier, String) => WomIdentifier) extends CallNode {
   val callType: String = "task"
   lazy val expressionBasedOutputPorts: List[ExpressionBasedOutputPort] = {
     callable.outputs.map(o => ExpressionBasedOutputPort(outputIdentifierCompoundingFunction(identifier, o.localName.value), o.womType, this, o.expression))
   }
 
-  override lazy val outputPorts: Set[OutputPort] = expressionBasedOutputPorts.toSet[OutputPort]
+  val singleCompletionPort: OutputPort = GraphNodeOutputPort(
+    identifier,
+    WomCompositeType(callable.outputs.map(definition => definition.localName.value -> definition.womType).toMap),
+    this)
+
+  override lazy val outputPorts: Set[OutputPort] = expressionBasedOutputPorts.toSet[OutputPort] + singleCompletionPort
 
   /**
     * Evaluate outputs using the custom evaluation function of the task definition.
@@ -91,7 +92,7 @@ final case class WorkflowCallNode private (override val identifier: WomIdentifie
                                            callable: WorkflowDefinition,
                                            override val inputPorts: Set[GraphNodePort.InputPort],
                                            inputDefinitionMappings: InputDefinitionMappings,
-                                           override val nonInputBasedPrerequisites: Set[GraphNode],
+                                           override val nonInputBasedPrerequisites: Set[OutputPort],
                                            outputIdentifierCompoundingFunction: (WomIdentifier, String) => WomIdentifier) extends CallNode {
   val callType: String = "workflow"
   val subworkflowCallOutputPorts: Set[SubworkflowCallOutputPort] = {
@@ -213,7 +214,7 @@ object CallNode {
                            callable: Callable,
                            inputPorts: Set[GraphNodePort.InputPort],
                            inputDefinitionMappings: InputDefinitionMappings,
-                           mustFollow: Set[GraphNode],
+                           mustFollow: Set[OutputPort],
                            outputIdentifierCompoundingFunction: (WomIdentifier, String) => WomIdentifier): CallNode = callable match {
     case t: CommandTaskDefinition => CommandCallNode(nodeIdentifier, t, inputPorts, inputDefinitionMappings, mustFollow, outputIdentifierCompoundingFunction)
     case w: WorkflowDefinition => WorkflowCallNode(nodeIdentifier, w, inputPorts, inputDefinitionMappings, mustFollow, outputIdentifierCompoundingFunction)
@@ -238,7 +239,7 @@ object CallNode {
     def build(nodeIdentifier: WomIdentifier,
               callable: Callable,
               inputDefinitionFold: InputDefinitionFold,
-              mustFollow: Set[GraphNode],
+              mustFollow: Set[OutputPort],
               outputIdentifierCompoundingFunction: (WomIdentifier, String) => WomIdentifier = defaultOutputIdentifierCompounder
              ): CallNodeAndNewNodes = {
       val callNode = CallNode(nodeIdentifier, callable, inputDefinitionFold.callInputPorts, inputDefinitionFold.mappings, mustFollow, outputIdentifierCompoundingFunction)
