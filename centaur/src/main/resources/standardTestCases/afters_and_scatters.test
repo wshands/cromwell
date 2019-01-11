@@ -9,7 +9,7 @@ files {
 }
 
 metadata {
-  workflowName: afters
+  workflowName: afters_and_scatters
   status: Succeeded
   "outputs.afters_and_scatters.read0_results.0": 0
   "outputs.afters_and_scatters.read0_results.1": 0
