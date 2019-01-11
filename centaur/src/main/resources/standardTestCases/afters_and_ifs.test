@@ -1,7 +1,7 @@
 name: afters_and_ifs
 testFormat: workflowsuccess
 backends: [LocalNoDocker]
-tags: [localdockertest]
+tags: [localdockertest, biscayne, after_keyword]
 
 files {
   workflow: afters/afters_and_ifs.wdl
@@ -11,5 +11,5 @@ files {
 metadata {
   workflowName: afters
   status: Succeeded
-  "outputs.afters.result": 6
+  "outputs.afters.result": 2
 }

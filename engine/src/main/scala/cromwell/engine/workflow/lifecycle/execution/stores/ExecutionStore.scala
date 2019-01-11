@@ -52,7 +52,6 @@ object ExecutionStore {
           val result = key.node.upstreamPorts forall { p =>
               p.executionNode.isInStatus(chooseIndex(p), statusTable)
           }
-          println(s"Done=$result for $key upstreams: ${key.node.upstreamPorts.map(_.internalName).mkString(", ")}")
           result
       }
     }

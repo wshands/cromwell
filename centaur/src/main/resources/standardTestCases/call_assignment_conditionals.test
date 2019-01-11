@@ -1,5 +1,6 @@
 name: call_assignment_conditionals
 testFormat: workflowsuccess
+tags: [biscayne, call_assignment_test]
 
 files {
   workflow: call_assignment/call_assignment_conditionals.wdl

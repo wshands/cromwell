@@ -1,7 +1,7 @@
 name: afters
 testFormat: workflowsuccess
 backends: [LocalNoDocker]
-tags: [localdockertest]
+tags: [localdockertest, biscayne, after_keyword]
 
 files {
   workflow: afters/afters.wdl

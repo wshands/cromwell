@@ -7,7 +7,7 @@ workflow afters_and_scatters {
   }
 
   input {
-    String where = "/tmp/helloFile"
+    String where = "/tmp/afters_and_scattersFile"
   }
 
   scatter (a in range(3)) {

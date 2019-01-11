@@ -2,25 +2,25 @@ version development
 
 workflow afters {
   input {
-    String where = "/tmp/helloFile"
+    String where = "/tmp/afters_and_ifsFile"
   }
 
   # Should not impact 'read' because it happens before the second read:
-  call write_to_shared as foo1 { input: i = 5, where = where }
+  call write_to_shared as foo1 { input: i = 1, where = where }
 
   # Conditionally do (and don't) call a write:
   if (1 == 1) {
-    call write_to_shared as foo2a after foo1 { input: i = 6, where = where }
+    call write_to_shared as foo2a after foo1 { input: i = 2, where = where }
   }
   if (1 == 2) {
-    call write_to_shared as foo2b after foo1 { input: i = 6, where = where }
+    call write_to_shared as foo2b after foo1 { input: i = 3, where = where }
   }
 
   # The call to 'read':
   call read_from_shared after foo2a after foo2b { input: where = where }
 
   # Should not impact 'read' because it happens afterwards:
-  call write_to_shared as foo3 after read_from_shared { input: i = 77, where = where }
+  call write_to_shared as foo3 after foo1 after read_from_shared { input: i = 4, where = where }
 
   output {
     Int result = read_from_shared.read_result
@@ -34,7 +34,7 @@ task write_to_shared {
   }
   command <<<
     sleep 2
-    echo "~{i}" > /tmp/helloFile
+    echo "~{i}" > ~{where}
   >>>
   runtime {
     backend: "LocalNoDocker"
