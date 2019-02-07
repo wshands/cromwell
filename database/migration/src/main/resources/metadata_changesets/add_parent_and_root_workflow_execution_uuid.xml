@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <changeSet author="kshakir" id="add_parent_and_root_workflow_execution_uuid">
+        <addColumn tableName="WORKFLOW_METADATA_SUMMARY_ENTRY">
+            <column name="PARENT_WORKFLOW_EXECUTION_UUID" type="VARCHAR(100)" />
+            <column name="ROOT_WORKFLOW_EXECUTION_UUID" type="VARCHAR(100)" />
+        </addColumn>
+
+        <createIndex tableName="WORKFLOW_METADATA_SUMMARY_ENTRY" indexName="IX_WORKFLOW_METADATA_SUMMARY_ENTRY_PWEU">
+            <column name="PARENT_WORKFLOW_EXECUTION_UUID"/>
+        </createIndex>
+
+        <createIndex tableName="WORKFLOW_METADATA_SUMMARY_ENTRY" indexName="IX_WORKFLOW_METADATA_SUMMARY_ENTRY_RWEU">
+            <column name="ROOT_WORKFLOW_EXECUTION_UUID"/>
+        </createIndex>
+    </changeSet>
+    
+</databaseChangeLog>

@@ -88,7 +88,7 @@ class MetadataSlickDatabase(originalDatabaseConfig: Config)
       case WorkflowQuery => dataAccess.metadataEntriesLikeMetadataKeys(workflowExecutionUuid, metadataKeys, requireEmptyJobKey = true).result
       case CallOrWorkflowQuery => dataAccess.metadataEntriesLikeMetadataKeys(workflowExecutionUuid, metadataKeys, requireEmptyJobKey = false).result
     }
-      
+
     runTransaction(action)
   }
 
@@ -168,10 +168,18 @@ class MetadataSlickDatabase(originalDatabaseConfig: Config)
     }
   }
 
-  override def refreshMetadataSummaryEntries(startMetadataKey: String, endMetadataKey: String, nameMetadataKey: String,
-                                             statusMetadataKey: String, labelMetadataKey: String, submissionMetadataKey: String,
-                                             buildUpdatedSummary: (Option[WorkflowMetadataSummaryEntry], Seq[MetadataEntry]) =>
-                                               WorkflowMetadataSummaryEntry)
+  override def refreshMetadataSummaryEntries(startMetadataKey: String,
+                                             endMetadataKey: String,
+                                             nameMetadataKey: String,
+                                             statusMetadataKey: String,
+                                             submissionMetadataKey: String,
+                                             parentWorkflowIdKey: String,
+                                             rootWorkflowIdKey: String,
+                                             labelMetadataKey: String,
+                                             limit: Int,
+                                             buildUpdatedSummary:
+                                             (Option[WorkflowMetadataSummaryEntry], Seq[MetadataEntry])
+                                               => WorkflowMetadataSummaryEntry)
                                             (implicit ec: ExecutionContext): Future[Long] = {
     val likeMetadataLabelKey = labelMetadataKey + "%"
     val action = for {
@@ -179,7 +187,9 @@ class MetadataSlickDatabase(originalDatabaseConfig: Config)
         "WORKFLOW_METADATA_SUMMARY_ENTRY", "METADATA_ENTRY")
       previousMetadataEntryId = previousMetadataEntryIdOption.getOrElse(-1L)
       metadataEntries <- dataAccess.metadataEntriesForIdGreaterThanOrEqual((
-        previousMetadataEntryId + 1L, startMetadataKey, endMetadataKey, nameMetadataKey, statusMetadataKey, likeMetadataLabelKey, submissionMetadataKey)).result
+        previousMetadataEntryId + 1L, startMetadataKey, endMetadataKey, nameMetadataKey, statusMetadataKey,
+        submissionMetadataKey, parentWorkflowIdKey, rootWorkflowIdKey, likeMetadataLabelKey, limit.toLong
+      )).result
       metadataWithoutLabels = metadataEntries.filterNot(_.metadataKey.contains(labelMetadataKey)).groupBy(_.workflowExecutionUuid)
       customLabelEntries = metadataEntries.filter(_.metadataKey.contains(labelMetadataKey))
       _ <- DBIO.sequence(metadataWithoutLabels map updateWorkflowMetadataSummaryEntry(buildUpdatedSummary))

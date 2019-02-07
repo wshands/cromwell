@@ -26,7 +26,12 @@ trait WorkflowMetadataSummaryEntryComponent {
 
     def submissionTimestamp = column[Option[Timestamp]]("SUBMISSION_TIMESTAMP")
 
-    override def * = (workflowExecutionUuid, workflowName, workflowStatus, startTimestamp, endTimestamp, submissionTimestamp,
+    def parentWorkflowExecutionUuid = column[Option[String]]("PARENT_WORKFLOW_EXECUTION_UUID", O.Length(100))
+
+    def rootWorkflowExecutionUuid = column[Option[String]]("ROOT_WORKFLOW_EXECUTION_UUID", O.Length(100))
+
+    override def * = (workflowExecutionUuid, workflowName, workflowStatus, startTimestamp, endTimestamp,
+      submissionTimestamp, parentWorkflowExecutionUuid, rootWorkflowExecutionUuid,
       workflowMetadataSummaryEntryId.?) <> (WorkflowMetadataSummaryEntry.tupled, WorkflowMetadataSummaryEntry.unapply)
 
     def ucWorkflowMetadataSummaryEntryWeu =
@@ -36,6 +41,12 @@ trait WorkflowMetadataSummaryEntryComponent {
 
     def ixWorkflowMetadataSummaryEntryWs =
       index("IX_WORKFLOW_METADATA_SUMMARY_ENTRY_WS", workflowStatus, unique = false)
+
+    def ixWorkflowMetadataSummaryEntryPweu =
+      index("IX_WORKFLOW_METADATA_SUMMARY_ENTRY_PWEU", parentWorkflowExecutionUuid, unique = false)
+
+    def ixWorkflowMetadataSummaryEntryRweu =
+      index("IX_WORKFLOW_METADATA_SUMMARY_ENTRY_RWEU", rootWorkflowExecutionUuid, unique = false)
   }
 
   val workflowMetadataSummaryEntries = TableQuery[WorkflowMetadataSummaryEntries]

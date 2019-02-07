@@ -35,12 +35,15 @@ object MetadataDatabaseAccess {
         workflowStatus = resolvedStatus orElse summary1.workflowStatus orElse summary2.workflowStatus,
         startTimestamp = summary1.startTimestamp orElse summary2.startTimestamp,
         endTimestamp = summary1.endTimestamp orElse summary2.endTimestamp,
-        submissionTimestamp = summary1.submissionTimestamp orElse summary2.submissionTimestamp
+        submissionTimestamp = summary1.submissionTimestamp orElse summary2.submissionTimestamp,
+        parentWorkflowExecutionUuid = summary1.parentWorkflowExecutionUuid orElse summary2.parentWorkflowExecutionUuid,
+        rootWorkflowExecutionUuid = summary1.rootWorkflowExecutionUuid orElse summary2.rootWorkflowExecutionUuid,
       )
     }
   }
 
-  def baseSummary(workflowUuid: String) = WorkflowMetadataSummaryEntry(workflowUuid, None, None, None, None, None)
+  def baseSummary(workflowUuid: String) =
+    WorkflowMetadataSummaryEntry(workflowUuid, None, None, None, None, None, None, None)
 
   // If visibility is made `private`, there's a bogus warning about this being unused.
   implicit class MetadatumEnhancer(val metadatum: MetadataEntry) extends AnyVal {
@@ -55,6 +58,10 @@ object MetadataDatabaseAccess {
           base.copy(endTimestamp = metadatum.metadataValue.parseSystemTimestampOption)
         case WorkflowMetadataKeys.SubmissionTime =>
           base.copy(submissionTimestamp = metadatum.metadataValue.parseSystemTimestampOption)
+        case WorkflowMetadataKeys.ParentWorkflowId =>
+          base.copy(parentWorkflowExecutionUuid = metadatum.metadataValue.toRawStringOption)
+        case WorkflowMetadataKeys.RootWorkflowId =>
+          base.copy(rootWorkflowExecutionUuid = metadatum.metadataValue.toRawStringOption)
       }
     }
   }
@@ -152,9 +159,12 @@ trait MetadataDatabaseAccess {
       metadataToMetadataEvents(id)
   }
 
-  def refreshWorkflowMetadataSummaries()(implicit ec: ExecutionContext): Future[Long] = {
-    metadataDatabaseInterface.refreshMetadataSummaryEntries(WorkflowMetadataKeys.StartTime, WorkflowMetadataKeys.EndTime, WorkflowMetadataKeys.Name,
-      WorkflowMetadataKeys.Status, WorkflowMetadataKeys.Labels, WorkflowMetadataKeys.SubmissionTime, MetadataDatabaseAccess.buildUpdatedSummary)
+  def refreshWorkflowMetadataSummaries(limit: Int)(implicit ec: ExecutionContext): Future[Long] = {
+    metadataDatabaseInterface.refreshMetadataSummaryEntries(
+      WorkflowMetadataKeys.StartTime, WorkflowMetadataKeys.EndTime, WorkflowMetadataKeys.Name,
+      WorkflowMetadataKeys.Status, WorkflowMetadataKeys.SubmissionTime,
+      WorkflowMetadataKeys.ParentWorkflowId, WorkflowMetadataKeys.RootWorkflowId,
+      WorkflowMetadataKeys.Labels, limit, MetadataDatabaseAccess.buildUpdatedSummary)
   }
 
   def getWorkflowStatus(id: WorkflowId)

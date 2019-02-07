@@ -94,8 +94,11 @@ class WriteMetadataActorSpec extends TestKitSuite with FlatSpecLike with Matcher
                                                endMetadataKey: String,
                                                nameMetadataKey: String,
                                                statusMetadataKey: String,
-                                               labelMetadataKey: String,
                                                submissionMetadataKey: String,
+                                               parentWorkflowIdKey: String,
+                                               rootWorkflowIdKey: String,
+                                               labelMetadataKey: String,
+                                               limit: Int,
                                                buildUpdatedSummary: (
                                                  Option[WorkflowMetadataSummaryEntry],
                                                    Seq[MetadataEntry]) => WorkflowMetadataSummaryEntry)

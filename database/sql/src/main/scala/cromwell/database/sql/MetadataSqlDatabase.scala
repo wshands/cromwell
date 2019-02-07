@@ -65,8 +65,15 @@ trait MetadataSqlDatabase extends SqlDatabase {
     * @param buildUpdatedSummary Takes in the optional existing summary and the metadata, returns the new summary.
     * @return A `Future` with the maximum metadataEntryId summarized by the invocation of this method.
     */
-  def refreshMetadataSummaryEntries(startMetadataKey: String, endMetadataKey: String, nameMetadataKey: String,
-                                    statusMetadataKey: String, labelMetadataKey: String, submissionMetadataKey: String,
+  def refreshMetadataSummaryEntries(startMetadataKey: String,
+                                    endMetadataKey: String,
+                                    nameMetadataKey: String,
+                                    statusMetadataKey: String,
+                                    submissionMetadataKey: String,
+                                    parentWorkflowIdKey: String,
+                                    rootWorkflowIdKey: String,
+                                    labelMetadataKey: String,
+                                    limit: Int,
                                     buildUpdatedSummary:
                                     (Option[WorkflowMetadataSummaryEntry], Seq[MetadataEntry])
                                       => WorkflowMetadataSummaryEntry)
