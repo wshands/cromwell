@@ -38,7 +38,19 @@ final case class WesSubmission(workflowParams: String,
     val optionsPart = workflowEngineParameters map { o => Multipart.FormData.BodyPart(WorkflowOptionsKey, HttpEntity(MediaTypes.`application/json`, o)) }
     val labelsPart = tags map { t => Multipart.FormData.BodyPart(LabelsKey, HttpEntity(MediaTypes.`application/json`, t)) }
 
-    val parts = List(sourcePart, Option(urlPart), Option(typePart), Option(typeVersionPart), Option(inputsPart), optionsPart, labelsPart).flatten
+
+    var parts = List(sourcePart, Option(urlPart), Option(typePart), Option(typeVersionPart), Option(inputsPart), optionsPart, labelsPart).flatten
+
+    // The Cromwell API cannot accept both a workflow URL and workflow source so only send one
+    if (sourcePart == null || sourcePart.isEmpty) {
+      //parts = List(Option(urlPart), Option(typePart), Option(typeVersionPart), Option(inputsPart), optionsPart, labelsPart).flatten
+      parts = List(Option(urlPart), Option(typePart), Option(typeVersionPart), Option(inputsPart)).flatten
+    }
+    else {
+      //parts = List(sourcePart, Option(typePart), Option(typeVersionPart), Option(inputsPart), optionsPart, labelsPart).flatten
+      parts = List(sourcePart, Option(typePart), Option(typeVersionPart), Option(inputsPart)).flatten
+    }
+    //val parts = List(sourcePart, Option(urlPart), Option(typePart), Option(typeVersionPart), Option(inputsPart), optionsPart, labelsPart).flatten
 
     Multipart.FormData(parts: _*).toEntity()
   }
