@@ -28,7 +28,8 @@ final case class WesSubmission(workflowParams: String,
       Content-Disposition headers on each of these files which can be used to describe directory structure and such
       for relative import resolution
      */
-    val sourcePart = workflowAttachment.headOption map { a => Multipart.FormData.BodyPart(WorkflowSourceKey, HttpEntity(MediaTypes.`application/json`, a)) }
+    //val sourcePart = workflowAttachment.headOption map { a => Multipart.FormData.BodyPart(WorkflowSourceKey, HttpEntity(MediaTypes.`application/json`, a)) }
+    val sourcePart = workflowAttachment.headOption map { a => Multipart.FormData.BodyPart(WorkflowSourceKey, HttpEntity(MediaTypes.`application/json`, a.toString)) }
 
     val urlPart = Multipart.FormData.BodyPart(WorkflowUrlKey, HttpEntity(MediaTypes.`application/json`, workflowUrl))
 
@@ -38,19 +39,15 @@ final case class WesSubmission(workflowParams: String,
     val optionsPart = workflowEngineParameters map { o => Multipart.FormData.BodyPart(WorkflowOptionsKey, HttpEntity(MediaTypes.`application/json`, o)) }
     val labelsPart = tags map { t => Multipart.FormData.BodyPart(LabelsKey, HttpEntity(MediaTypes.`application/json`, t)) }
 
-
+    //val parts = List(sourcePart, Option(urlPart), Option(typePart), Option(typeVersionPart), Option(inputsPart), optionsPart, labelsPart).flatten
     var parts = List(sourcePart, Option(urlPart), Option(typePart), Option(typeVersionPart), Option(inputsPart), optionsPart, labelsPart).flatten
-
     // The Cromwell API cannot accept both a workflow URL and workflow source so only send one
     if (sourcePart == null || sourcePart.isEmpty) {
-      //parts = List(Option(urlPart), Option(typePart), Option(typeVersionPart), Option(inputsPart), optionsPart, labelsPart).flatten
-      parts = List(Option(urlPart), Option(typePart), Option(typeVersionPart), Option(inputsPart)).flatten
+      parts = List(Option(urlPart), Option(typePart), Option(typeVersionPart), Option(inputsPart), optionsPart, labelsPart).flatten
     }
     else {
-      //parts = List(sourcePart, Option(typePart), Option(typeVersionPart), Option(inputsPart), optionsPart, labelsPart).flatten
-      parts = List(sourcePart, Option(typePart), Option(typeVersionPart), Option(inputsPart)).flatten
+      parts = List(sourcePart, Option(typePart), Option(typeVersionPart), Option(inputsPart), optionsPart, labelsPart).flatten
     }
-    //val parts = List(sourcePart, Option(urlPart), Option(typePart), Option(typeVersionPart), Option(inputsPart), optionsPart, labelsPart).flatten
 
     Multipart.FormData(parts: _*).toEntity()
   }
